@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import re
+from google_play_scraper import search
+import time
+
 def clean_app_name(name):
     name=name.strip().strip('"').strip("'")
     name=re.sub(r'^[+./\-\s]+','',name)
@@ -51,10 +54,43 @@ def preprocessing(df):
     df=df.sort_values('Reviews',ascending=False).drop_duplicates(subset="App")
     #Feature engineering for recommendation system
     df["text_features"]=df["Category"]+ " "+ df["Genres"]
+
+    #Calculating Popularity Score using normalized Installs count and Rating
+    df["norm_installs"]=(df["Installs"]-df["Installs"].min())/(df["Installs"].max()-df["Installs"].min())
+    df["norm_rating"]=(df["Rating"]-df["Rating"].min())/(df["Rating"].max()-df["Rating"].min())
+    df["popularity_score"]=(0.7*df["norm_installs"])+(0.3*df["norm_rating"])
+    df.drop(columns=["norm_installs","norm_rating"],inplace=True)
+    return df
+
+def add_image(df):
+    image_urls=[]
+    #Fetching images for top 1000 apps
+    top_df = df.sort_values(by="popularity_score", ascending=False).head(1000).copy()
+    for i, app in enumerate(top_df["App"]):
+        try:
+            result=search(app,n_hits=1)
+            if result:
+                image_urls.append(result[0]['icon'])
+            else:
+                image_urls.append(None)
+        except:
+            image_urls.append(None)
+        #Number of app image loaded
+        if i%50==0:
+            print(f"{i} apps processed")
+        time.sleep(0.2)
+    top_df["Image_URL"]=image_urls
+
+    #Merging back with original data
+    df = df.merge(top_df[["App", "Image_URL"]], on="App", how="left")
+
+    #Filling the apps containing no images with placeholder
+    df["Image_URL"].fillna("https://via.placeholder.com/80", inplace=True)
     return df
 if __name__=="__main__":
-    df=pd.read_csv("data/googleplaystore.csv")
+    df=pd.read_csv("../data/googleplaystore.csv")
     print(f"Shape of the dataset before preprocessing {df.shape}")
     df= preprocessing(df)
-    df.to_csv("data/preprocessed_data.csv",index=False)
+    df=add_image(df)
+    df.to_csv("../data/final_dataset.csv")
     print(f"Shape of the dataset after preprocessing: {df.shape}")
