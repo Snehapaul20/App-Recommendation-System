@@ -43,7 +43,11 @@ The final system allows users to select an app and instantly discover similar, h
 - TheFuzz (Fuzzy Matching)
 - Google Play Scraper
 
+## Dataset
+The model is trained on the Google Play Store Apps dataset sourced from Kaggle
+https://www.kaggle.com/datasets/lava18/google-play-store-apps
 
+Due to size constraints, the dataset is not included in this repository.
 ## Project Structure
 ```
 App-Recommendation-System/
