@@ -4,7 +4,7 @@ from sklearn.metrics.pairwise import linear_kernel
 from thefuzz import process
 import joblib
 
-df=pd.read_csv("../data/final_dataset.csv")
+df=pd.read_csv("data/final_dataset.csv")
 tfidf=TfidfVectorizer(stop_words="english")
 tfidf_matrix=tfidf.fit_transform(df["text_features"])
 cosine_sim=linear_kernel(tfidf_matrix,tfidf_matrix)
@@ -29,5 +29,5 @@ model_data={
     "cosine_sim":cosine_sim,
     "df":df
 }
-joblib.dump(model_data, "../model/model.pkl")
+joblib.dump(model_data, "model/model.pkl")
 print("Model saved as model.pkl")
